@@ -1,8 +1,17 @@
+require('dotenv').config();
 const axios = require("axios");
 const { exec } = require("child_process");
-// const schedule = require("node-schedule"); // For scheduling the script
 
 // GitHub Configuration
+// const GITHUB_TOKEN = "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"; // Replace with your PAT
+// const REPO_OWNER = "juansalerno"; // GitHub organization or username
+// const REPO_NAME = "git_branch_cleaner";
+// const MAIN_BRANCH = "main";
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const REPO_OWNER = process.env.REPO_OWNER;
+const REPO_NAME = process.env.REPO_NAME;
+const MAIN_BRANCH = process.env.MAIN_BRANCH;
+const BASE_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
 
 // Axios configuration for GitHub API
 const githubApi = axios.create({
@@ -101,12 +110,18 @@ async function cleanUpBranches() {
             console.log(`💡 Branch '${branchName}' is not merged. Skipping...`);
         }
     }
+    try {
+        await deleteOrphanedLocalBranches();
+        console.log("🎉 Orphaned local branches cleanup finished!");
+    } catch (err) {
+        console.error("❌ Error deleting orphaned local branches:", err.message);
+    }
 
     console.log("🎉 Cleanup job finished!");
 }
 
 // Bringing in local branches and syncing with remote
-function updateLocalBranches() {
+function updateLocalBranchesWithRemote() {
     return new Promise((resolve, reject) => {
         console.log("🔄 Updating local branch list to sync with remote...");
         exec(`git fetch --prune`, (error, stdout, stderr) => {
@@ -120,11 +135,58 @@ function updateLocalBranches() {
         });
     });
 }
+function deleteOrphanedLocalBranches() {
+    return new Promise((resolve, reject) => {
+        // List all local branches
+        exec(`git branch`, (error, stdout, stderr) => {
+            if (error) {
+                console.error("Error listing local branches:", stderr);
+                reject(error);
+                return;
+            }
 
+            const localBranches = stdout.split("\n")
+                .map(branch => branch.trim().replace(/^\* /, "")) // Remove the '*' prefix from the current branch
+                .filter(branch => branch);
+
+            // List all remote branches
+            exec(`git branch -r`, (error, stdout, stderr) => {
+                if (error) {
+                    console.error("Error listing remote branches:", stderr);
+                    reject(error);
+                    return;
+                }
+
+                const remoteBranches = stdout.split("\n").map(branch => branch.trim().replace("origin/", "")).filter(branch => branch);
+
+                // Find and delete orphaned local branches
+                const orphanedBranches = localBranches.filter(branch => !remoteBranches.includes(branch) && branch !== "main" && branch !== "master");
+
+                if (orphanedBranches.length === 0) {
+                    console.log("No orphaned local branches to delete.");
+                    resolve();
+                    return;
+                }
+
+                orphanedBranches.forEach(branch => {
+                    exec(`git branch -D ${branch}`, (error, stdout, stderr) => {
+                        if (error) {
+                            console.error(`Error deleting local branch '${branch}':`, stderr);
+                        } else {
+                            console.log(`✅ Deleted orphaned local branch: ${branch}`);
+                        }
+                    });
+                });
+
+                resolve();
+            });
+        });
+    });
+}
 // Main function to update local branches and clean up
 async function runCleanup() {
     try {
-        await updateLocalBranches();
+        await updateLocalBranchesWithRemote();
         await cleanUpBranches();
     } catch (error) {
         console.error("❌ Cleanup job failed:", error.message);
