@@ -100,20 +100,19 @@ async function cleanUpBranches() {
             try {
                 await deleteLocalBranch(branchName);
             } catch (error) {
-                console.warn(`⚠️ Unable to delete local branch '${branchName}' - It might not exist locally.`);
+                console.warn(`⚠️ Unable to delete local branch '${branchName}' - It might not exist locally or you are currently working on it.`);
             }
         } else {
             console.log(`💡 Branch '${branchName}' is not merged. Skipping...`);
         }
     }
+
     try {
         await deleteOrphanedLocalBranches();
         console.log("🎉 Orphaned local branches cleanup finished!");
     } catch (err) {
         console.error("❌ Error deleting orphaned local branches:", err.message);
     }
-
-    console.log("🎉 Cleanup job finished!");
 }
 
 // Bringing in local branches and syncing with remote
@@ -205,6 +204,7 @@ async function runCleanup() {
         await updateLocalBranchesWithRemote();
         await cleanUpBranches();
         await updateLocalBranchesWithRemote()
+        console.log("🎉 Cleanup job finished!");
     } catch (error) {
         console.error("❌ Cleanup job failed:", error.message);
     }
