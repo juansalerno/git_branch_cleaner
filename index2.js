@@ -74,8 +74,6 @@ function deleteLocalBranch(branchName) {
 
 // Function to clean up both remote and local branches
 async function cleanUpBranches() {
-    console.log("🚀 Starting cleanup job...");
-
     const branches = await fetchBranches();
 
     for (const branch of branches) {
@@ -109,7 +107,6 @@ async function cleanUpBranches() {
 
     try {
         await deleteOrphanedLocalBranches();
-        console.log("🎉 Orphaned local branches cleanup finished!");
     } catch (err) {
         console.error("❌ Error deleting orphaned local branches:", err.message);
     }
@@ -192,6 +189,7 @@ function deleteOrphanedLocalBranches() {
                         });
                     });
 
+                    console.log("🎉 Orphaned local branches cleanup finished!");
                     resolve();
                 });
             });
@@ -201,6 +199,7 @@ function deleteOrphanedLocalBranches() {
 // Main function to update local branches and clean up
 async function runCleanup() {
     try {
+        console.log("🚀 Starting cleanup job...");
         await updateLocalBranchesWithRemote();
         await cleanUpBranches();
         await updateLocalBranchesWithRemote()
