@@ -153,28 +153,48 @@ function deleteOrphanedLocalBranches() {
                     return;
                 }
 
-                const remoteBranches = stdout.split("\n").map(branch => branch.trim().replace("origin/", "")).filter(branch => branch);
+                const remoteBranches = stdout.split("\n")
+                    .map(branch => branch.trim().replace("origin/", ""))
+                    .filter(branch => branch);
 
-                // Find and delete orphaned local branches
-                const orphanedBranches = localBranches.filter(branch => !remoteBranches.includes(branch) && branch !== "main" && branch !== "master");
+                // Check if local branches have an upstream branch
+                exec(`git branch -vv`, (error, stdout, stderr) => {
+                    if (error) {
+                        console.error("Error checking upstream branches:", stderr);
+                        reject(error);
+                        return;
+                    }
 
-                if (orphanedBranches.length === 0) {
-                    console.log("No orphaned local branches to delete.");
-                    resolve();
-                    return;
-                }
+                    const branchesWithUpstream = stdout.split("\n")
+                        .map(line => line.trim())
+                        .filter(line => line.includes("[origin/"))
+                        .map(line => line.split(" ")[0]);
 
-                orphanedBranches.forEach(branch => {
-                    exec(`git branch -D ${branch}`, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`Error deleting local branch '${branch}':`, stderr);
-                        } else {
-                            console.log(`✅ Deleted orphaned local branch: ${branch}`);
-                        }
+                    // Find and delete orphaned local branches
+                    const orphanedBranches = localBranches.filter(branch =>
+                        !remoteBranches.includes(branch) &&
+                        branchesWithUpstream.includes(branch) &&
+                        branch !== "main" && branch !== "master"
+                    );
+
+                    if (orphanedBranches.length === 0) {
+                        console.log("No orphaned local branches to delete.");
+                        resolve();
+                        return;
+                    }
+
+                    orphanedBranches.forEach(branch => {
+                        exec(`git branch -D ${branch}`, (error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`Error deleting local branch '${branch}':`, stderr);
+                            } else {
+                                console.log(`✅ Deleted orphaned local branch: ${branch}`);
+                            }
+                        });
                     });
-                });
 
-                resolve();
+                    resolve();
+                });
             });
         });
     });
