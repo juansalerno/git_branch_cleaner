@@ -1,13 +1,14 @@
+require('dotenv').config();
 const axios = require("axios");
 const { exec } = require("child_process");
 // const schedule = require("node-schedule"); // For scheduling the script
 
 // GitHub Configuration
-// const GITHUB_TOKEN = "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"; // Replace with your PAT
-// const REPO_OWNER = "juansalerno"; // GitHub organization or username
-// const REPO_NAME = "auto_branch_pruner";
-// const BASE_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
-const MAIN_BRANCH = "main"; // Replace with 'master', 'develop', or your main branch name
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const REPO_OWNER = process.env.REPO_OWNER;
+const REPO_NAME = process.env.REPO_NAME;
+const MAIN_BRANCH = process.env.MAIN_BRANCH;
+const BASE_API_URL = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
 
 // Axios configuration for GitHub API
 const githubApi = axios.create({
