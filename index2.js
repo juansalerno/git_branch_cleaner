@@ -204,6 +204,7 @@ async function runCleanup() {
     try {
         await updateLocalBranchesWithRemote();
         await cleanUpBranches();
+        await updateLocalBranchesWithRemote()
     } catch (error) {
         console.error("❌ Cleanup job failed:", error.message);
     }
