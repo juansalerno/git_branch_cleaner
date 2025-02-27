@@ -3,10 +3,6 @@ const axios = require("axios");
 const { exec } = require("child_process");
 
 // GitHub Configuration
-// const GITHUB_TOKEN = "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"; // Replace with your PAT
-// const REPO_OWNER = "juansalerno"; // GitHub organization or username
-// const REPO_NAME = "git_branch_cleaner";
-// const MAIN_BRANCH = "main";
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.REPO_OWNER;
 const REPO_NAME = process.env.REPO_NAME;
