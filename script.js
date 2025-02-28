@@ -202,7 +202,7 @@ async function runCleanup() {
         console.log("🚀 Starting cleanup job...");
         await updateLocalBranchesWithRemote();
         await cleanUpBranches();
-        await updateLocalBranchesWithRemote()
+        await updateLocalBranchesWithRemote();
         console.log("🎉 Cleanup job finished!");
     } catch (error) {
         console.error("❌ Cleanup job failed:", error.message);
